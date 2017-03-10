@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick (View V){
-                Intent papa = new Intent(MainActivity.this, AuthCompleteActivity.class);
+                Intent papa = new Intent(MainActivity.this, APIActivity.class);
                 startActivity(papa);
             }
         });

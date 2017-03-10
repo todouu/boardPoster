@@ -4,18 +4,14 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
+import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.SimpleCursorAdapter;
 
-import net.openid.appauth.AppAuthConfiguration;
 import net.openid.appauth.AuthState;
 import net.openid.appauth.AuthorizationException;
 import net.openid.appauth.AuthorizationRequest;
@@ -28,7 +24,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,9 +46,9 @@ public class APIActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SharedPreferences authPreference = getSharedPreferences("auth", MODE_PRIVATE);
-        setContentView(R.layout.activity_api);
+        setContentView(R.layout.get_post_lay);
         mAuthorizationService = new AuthorizationService(this);
-        ((Button)findViewById(R.id.google_plus_get_post_button)).setOnClickListener(new View.OnClickListener() {
+        ((Button)findViewById(R.id.get_post_button)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 try{
@@ -63,7 +58,7 @@ public class APIActivity extends AppCompatActivity {
                             if(e == null){
                                 mOkHttpClient = new OkHttpClient();
                                 HttpUrl reqUrl = HttpUrl.parse("https://www.googleapis.com/plusDomains/v1/people/me/activities/user");
-                                reqUrl = reqUrl.newBuilder().addQueryParameter("key", "AIzaSyDsx70aHdYtjvCMIDHtlK-Ni3Qf--fwURg").build();
+                                //reqUrl = reqUrl.newBuilder().addQueryParameter("key", "AIzaSyDsx70aHdYtjvCMIDHtlK-Ni3Qf--fwURg").build();
                                 Request request = new Request.Builder()
                                         .url(reqUrl)
                                         .addHeader("Authorization", "Bearer " + accessToken)
@@ -90,13 +85,13 @@ public class APIActivity extends AppCompatActivity {
                                             final SimpleAdapter postAdapter = new SimpleAdapter(
                                                     APIActivity.this,
                                                     posts,
-                                                    R.layout.google_plus_item,
+                                                    R.layout.boarddate,
                                                     new String[]{"published", "title"},
-                                                    new int[]{R.id.google_plus_item_date_text, R.id.google_plus_item_text});
+                                                    new int[]{R.id.google_date, R.id.google_content});
                                             runOnUiThread(new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    ((ListView)findViewById(R.id.google_post_list)).setAdapter(postAdapter);
+                                                    ((ListView)findViewById(R.id.post_view)).setAdapter(postAdapter);
                                                 }
                                             });
                                         } catch (JSONException e1) {
@@ -146,10 +141,10 @@ public class APIActivity extends AppCompatActivity {
 
         Uri authEndpoint = new Uri.Builder().scheme("https").authority("accounts.google.com").path("/o/oauth2/v2/auth").build();
         Uri tokenEndpoint = new Uri.Builder().scheme("https").authority("www.googleapis.com").path("/oauth2/v4/token").build();
-        Uri redirect = new Uri.Builder().scheme("net.justinwolford.quotetracker").path("foo").build();
+        Uri redirect = new Uri.Builder().scheme("todou.boardposter").path("foo").build();
 
         AuthorizationServiceConfiguration config = new AuthorizationServiceConfiguration(authEndpoint, tokenEndpoint, null);
-        AuthorizationRequest req = new AuthorizationRequest.Builder(config, "107461084371-ra3nj2pappg462gmr7a9o0r80u34l3lf.apps.googleusercontent.com", ResponseTypeValues.CODE, redirect)
+        AuthorizationRequest req = new AuthorizationRequest.Builder(config, "538695055339-mhjgfle1oit6an188s8u9a0vfe9t462u.apps.googleusercontent.com", ResponseTypeValues.CODE, redirect)
                 .setScopes("https://www.googleapis.com/auth/plus.me", "https://www.googleapis.com/auth/plus.stream.write", "https://www.googleapis.com/auth/plus.stream.read")
                 .build();
 
