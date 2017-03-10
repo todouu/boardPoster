@@ -32,8 +32,10 @@ import java.util.Map;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.HttpUrl;
+import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 public class APIActivity extends AppCompatActivity {
@@ -41,6 +43,9 @@ public class APIActivity extends AppCompatActivity {
     private AuthorizationService mAuthorizationService;
     private AuthState mAuthState;
     private OkHttpClient mOkHttpClient;
+    private OkHttpClient client = new OkHttpClient();
+    public static final MediaType JSON
+            = MediaType.parse("application/json; charset=utf-8");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,14 +53,14 @@ public class APIActivity extends AppCompatActivity {
         SharedPreferences authPreference = getSharedPreferences("auth", MODE_PRIVATE);
         setContentView(R.layout.get_post_lay);
         mAuthorizationService = new AuthorizationService(this);
-        ((Button)findViewById(R.id.get_post_button)).setOnClickListener(new View.OnClickListener() {
+        ((Button) findViewById(R.id.get_post_button)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                try{
+                try {
                     mAuthState.performActionWithFreshTokens(mAuthorizationService, new AuthState.AuthStateAction() {
                         @Override
                         public void execute(@Nullable String accessToken, @Nullable String idToken, @Nullable AuthorizationException e) {
-                            if(e == null){
+                            if (e == null) {
                                 mOkHttpClient = new OkHttpClient();
                                 HttpUrl reqUrl = HttpUrl.parse("https://www.googleapis.com/plusDomains/v1/people/me/activities/user");
                                 //reqUrl = reqUrl.newBuilder().addQueryParameter("key", "AIzaSyDsx70aHdYtjvCMIDHtlK-Ni3Qf--fwURg").build();
@@ -75,11 +80,11 @@ public class APIActivity extends AppCompatActivity {
                                         try {
                                             JSONObject j = new JSONObject(r);
                                             JSONArray items = j.getJSONArray("items");
-                                            List<Map<String,String>> posts = new ArrayList<Map<String,String>>();
-                                            for(int i = 0; i < items.length(); i++){
+                                            List<Map<String, String>> posts = new ArrayList<Map<String, String>>();
+                                            for (int i = 0; i < items.length(); i++) {
                                                 HashMap<String, String> m = new HashMap<String, String>();
                                                 m.put("published", items.getJSONObject(i).getString("published"));
-                                                m.put("title",items.getJSONObject(i).getString("title"));
+                                                m.put("title", items.getJSONObject(i).getString("title"));
                                                 posts.add(m);
                                             }
                                             final SimpleAdapter postAdapter = new SimpleAdapter(
@@ -91,7 +96,7 @@ public class APIActivity extends AppCompatActivity {
                                             runOnUiThread(new Runnable() {
                                                 @Override
                                                 public void run() {
-                                                    ((ListView)findViewById(R.id.post_view)).setAdapter(postAdapter);
+                                                    ((ListView) findViewById(R.id.post_view)).setAdapter(postAdapter);
                                                 }
                                             });
                                         } catch (JSONException e1) {
@@ -103,25 +108,62 @@ public class APIActivity extends AppCompatActivity {
                             }
                         }
                     });
-                } catch(Exception e){
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        ((Button) findViewById(R.id.get_post_button)).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)  {
+                try {
+                    mAuthState.performActionWithFreshTokens(mAuthorizationService, new AuthState.AuthStateAction() {
+                        @Override
+                        public void execute(@Nullable String accessToken, @Nullable String idToken, @Nullable AuthorizationException e) {
+                            if (e == null) {
+                                mOkHttpClient = new OkHttpClient();
+                                //HttpUrl reqUrl = HttpUrl.parse("https://www.googleapis.com/plusDomains/v1/people/me/activities/user");
+                                String json = "{'object': { 'originalContent' : 'NEW MESSAGE' }, 'access': {'domainRestricted' : true }}";
+                                APIActivity example = new APIActivity();
+                                String response = example.post("https://www.googleapis.com/plusDomains/v1/people/me/activities/user",json);
+
+
+                                mOkHttpClient.newCall(request).enqueue(new Callback() {
+                                    @Override
+                                    public void onFailure(Call call, IOException e) {
+                                        e.printStackTrace();
+                                    }
+
+                                    @Override
+                                    public void onResponse(Call call, Response response) throws IOException {
+                                        String r = response.body().string();
+                                    }
+                                });
+                            }
+                        }
+                    });
+                }
+                catch (Exception e){
                     e.printStackTrace();
                 }
             }
         });
     }
 
+
+
+
     @Override
-    protected void onStart(){
+    protected void onStart() {
         mAuthState = getOrCreateAuthState();
         super.onStart();
-
     }
 
-    AuthState getOrCreateAuthState(){
+    AuthState getOrCreateAuthState() {
         AuthState auth = null;
         SharedPreferences authPreference = getSharedPreferences("auth", MODE_PRIVATE);
         String stateJson = authPreference.getString("stateJson", null);
-        if(stateJson != null){
+        if (stateJson != null) {
             try {
                 auth = AuthState.jsonDeserialize(stateJson);
             } catch (JSONException e) {
@@ -129,7 +171,7 @@ public class APIActivity extends AppCompatActivity {
                 return null;
             }
         }
-        if( auth != null && auth.getAccessToken() != null){
+        if (auth != null && auth.getAccessToken() != null) {
             return auth;
         } else {
             updateAuthState();
@@ -137,7 +179,7 @@ public class APIActivity extends AppCompatActivity {
         }
     }
 
-    void updateAuthState(){
+    void updateAuthState() {
 
         Uri authEndpoint = new Uri.Builder().scheme("https").authority("accounts.google.com").path("/o/oauth2/v2/auth").build();
         Uri tokenEndpoint = new Uri.Builder().scheme("https").authority("www.googleapis.com").path("/oauth2/v4/token").build();
@@ -151,4 +193,17 @@ public class APIActivity extends AppCompatActivity {
         Intent authComplete = new Intent(this, AuthCompleteActivity.class);
         mAuthorizationService.performAuthorizationRequest(req, PendingIntent.getActivity(this, req.hashCode(), authComplete, 0));
     }
+
+
+    String post(String url, String json) throws IOException {
+        RequestBody body = RequestBody.create(JSON, json);
+        Request request = new Request.Builder()
+                .url(url)
+                .post(body)
+                .build();
+        try (Response response = client.newCall(request).execute()) {
+            return response.body().string();
+        }
+    }
+
 }
