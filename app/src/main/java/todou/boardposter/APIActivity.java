@@ -43,7 +43,6 @@ public class APIActivity extends AppCompatActivity {
     private AuthorizationService mAuthorizationService;
     private AuthState mAuthState;
     private OkHttpClient mOkHttpClient;
-    private OkHttpClient client = new OkHttpClient();
     public static final MediaType JSON
             = MediaType.parse("application/json; charset=utf-8");
 
@@ -63,7 +62,7 @@ public class APIActivity extends AppCompatActivity {
                             if (e == null) {
                                 mOkHttpClient = new OkHttpClient();
                                 HttpUrl reqUrl = HttpUrl.parse("https://www.googleapis.com/plusDomains/v1/people/me/activities/user");
-                                //reqUrl = reqUrl.newBuilder().addQueryParameter("key", "AIzaSyDsx70aHdYtjvCMIDHtlK-Ni3Qf--fwURg").build();
+                                //reqUrl = reqUrl.newBuilder().addQueryParameter("key", "AIzaSyAyEUOau4tgH-LvEwu1aqv4NHvWAIIOrnE").build();
                                 Request request = new Request.Builder()
                                         .url(reqUrl)
                                         .addHeader("Authorization", "Bearer " + accessToken)
@@ -113,22 +112,26 @@ public class APIActivity extends AppCompatActivity {
                 }
             }
         });
-        ((Button) findViewById(R.id.get_post_button)).setOnClickListener(new View.OnClickListener() {
+
+        ((Button) findViewById(R.id.send_post_button)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)  {
-                try {
-                    mAuthState.performActionWithFreshTokens(mAuthorizationService, new AuthState.AuthStateAction() {
-                        @Override
-                        public void execute(@Nullable String accessToken, @Nullable String idToken, @Nullable AuthorizationException e) {
-                            if (e == null) {
-                                mOkHttpClient = new OkHttpClient();
-                                //HttpUrl reqUrl = HttpUrl.parse("https://www.googleapis.com/plusDomains/v1/people/me/activities/user");
+                //try {
+                //    mAuthState.performActionWithFreshTokens(mAuthorizationService, new AuthState.AuthStateAction() {
+                //        @Override
+                //        public void execute(@Nullable String accessToken, @Nullable String idToken, @Nullable AuthorizationException e) {
+                //            if (e == null) {
+                                //mOkHttpClient = new OkHttpClient();
+                                OkHttpClient client = new OkHttpClient();
+                                HttpUrl reqUrl = HttpUrl.parse("https://www.googleapis.com/plusDomains/v1/people/113345225564177323581/activities");
                                 String json = "{'object': { 'originalContent' : 'NEW MESSAGE' }, 'access': {'domainRestricted' : true }}";
-                                APIActivity example = new APIActivity();
-                                String response = example.post("https://www.googleapis.com/plusDomains/v1/people/me/activities/user",json);
-
-
-                                mOkHttpClient.newCall(request).enqueue(new Callback() {
+                                RequestBody body = RequestBody.create(JSON, json);
+                                Request request = new Request.Builder()
+                                        .addHeader("Authorization", "Bearer " + mAuthState.getAccessToken())
+                                        .url(reqUrl)
+                                        .post(body)
+                                        .build();
+                                client.newCall(request).enqueue(new Callback() {
                                     @Override
                                     public void onFailure(Call call, IOException e) {
                                         e.printStackTrace();
@@ -139,15 +142,18 @@ public class APIActivity extends AppCompatActivity {
                                         String r = response.body().string();
                                     }
                                 });
+
+
                             }
-                        }
-                    });
-                }
-                catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
+                        //}
+                    //});
+                //}
+                //catch (Exception e){
+                //   e.printStackTrace();
+                //}
+            //}
         });
+
     }
 
 
@@ -194,16 +200,5 @@ public class APIActivity extends AppCompatActivity {
         mAuthorizationService.performAuthorizationRequest(req, PendingIntent.getActivity(this, req.hashCode(), authComplete, 0));
     }
 
-
-    String post(String url, String json) throws IOException {
-        RequestBody body = RequestBody.create(JSON, json);
-        Request request = new Request.Builder()
-                .url(url)
-                .post(body)
-                .build();
-        try (Response response = client.newCall(request).execute()) {
-            return response.body().string();
-        }
-    }
 
 }
