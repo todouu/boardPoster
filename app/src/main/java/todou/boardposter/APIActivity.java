@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.EditText;
 
 import net.openid.appauth.AuthState;
 import net.openid.appauth.AuthorizationException;
@@ -62,7 +63,6 @@ public class APIActivity extends AppCompatActivity {
                             if (e == null) {
                                 mOkHttpClient = new OkHttpClient();
                                 HttpUrl reqUrl = HttpUrl.parse("https://www.googleapis.com/plusDomains/v1/people/me/activities/user");
-                                //reqUrl = reqUrl.newBuilder().addQueryParameter("key", "AIzaSyAyEUOau4tgH-LvEwu1aqv4NHvWAIIOrnE").build();
                                 Request request = new Request.Builder()
                                         .url(reqUrl)
                                         .addHeader("Authorization", "Bearer " + accessToken)
@@ -116,48 +116,31 @@ public class APIActivity extends AppCompatActivity {
         ((Button) findViewById(R.id.send_post_button)).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v)  {
-                //try {
-                //    mAuthState.performActionWithFreshTokens(mAuthorizationService, new AuthState.AuthStateAction() {
-                //        @Override
-                //        public void execute(@Nullable String accessToken, @Nullable String idToken, @Nullable AuthorizationException e) {
-                //            if (e == null) {
-                                //mOkHttpClient = new OkHttpClient();
-                                OkHttpClient client = new OkHttpClient();
-                                HttpUrl reqUrl = HttpUrl.parse("https://www.googleapis.com/plusDomains/v1/people/113345225564177323581/activities");
-                                String json = "{'object': { 'originalContent' : 'NEW MESSAGE' }, 'access': {'domainRestricted' : true }}";
-                                RequestBody body = RequestBody.create(JSON, json);
-                                Request request = new Request.Builder()
-                                        .addHeader("Authorization", "Bearer " + mAuthState.getAccessToken())
-                                        .url(reqUrl)
-                                        .post(body)
-                                        .build();
-                                client.newCall(request).enqueue(new Callback() {
-                                    @Override
-                                    public void onFailure(Call call, IOException e) {
-                                        e.printStackTrace();
-                                    }
+                EditText txtDescription = (EditText) findViewById(R.id.post_data);
+                String msg = txtDescription.getText().toString();
+                OkHttpClient client = new OkHttpClient();
+                HttpUrl reqUrl = HttpUrl.parse("https://www.googleapis.com/plusDomains/v1/people/113345225564177323581/activities");
+                String json = "{'object': { 'originalContent' : '"+ msg +"' }, 'access': {'domainRestricted' : true }}";
+                RequestBody body = RequestBody.create(JSON, json);
+                Request request = new Request.Builder()
+                        .addHeader("Authorization", "Bearer " + mAuthState.getAccessToken())
+                        .url(reqUrl)
+                        .post(body)
+                        .build();
+                client.newCall(request).enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Call call, IOException e) {
+                        e.printStackTrace();
+                    }
 
-                                    @Override
-                                    public void onResponse(Call call, Response response) throws IOException {
-                                        String r = response.body().string();
-                                    }
-                                });
-
-
-                            }
-                        //}
-                    //});
-                //}
-                //catch (Exception e){
-                //   e.printStackTrace();
-                //}
-            //}
+                    @Override
+                    public void onResponse(Call call, Response response) throws IOException {
+                        String r = response.body().string();
+                    }
+                });
+            }
         });
-
     }
-
-
-
 
     @Override
     protected void onStart() {
